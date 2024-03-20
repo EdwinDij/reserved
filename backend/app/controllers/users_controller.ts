@@ -1,12 +1,14 @@
 import User from '#models/user'
 import { HttpContext } from '@adonisjs/core/http'
 import hash from '@adonisjs/core/services/hash'
+import { v4 as uuidv4 } from 'uuid'
 
 export default class UsersController {
   async register({ request, response }: HttpContext) {
     const { username, email, password } = request.body()
-    const hashedPassword = await hash.make(password)
     try {
+      const hashedPassword = await hash.make(password)
+      const uuid = uuidv4()
       if (username === '' || email === '' || password === '') {
         return response.status(400).json({ message: 'Veuillez remplir les champs.' })
       }
@@ -29,7 +31,8 @@ export default class UsersController {
           .status(400)
           .json({ message: 'Un compte avec cette adresse email existe déjà.' })
       }
-      const user = await User.create({ username, email, password: hashedPassword })
+      const user = await User.create({ uuid, username, email, password: hashedPassword })
+      response.redirect('/login')
       return response
         .status(201)
         .json({ username, email, message: 'Votre compte à bien été crée.' })
